@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>METANIT.COM</title>
+    <meta charset="utf-8" />
+</head>
+<body>
+    <p>Enter title</p>
+    <input id="postTitle"></input>
+    <p>Fill post content</p>
+    <input id="postContent"></input>
+    <br/>
+    <button id="saveBtn">Save post</button>
+    <button id="resetBtn">Reset form</button>
+    <section class="posts">
+
+    </section>
+    <script>
+        async function getPosts() {
+            const response = await fetch('/api/posts', {
+                method: 'GET',
+                headers: {'Accept': 'application/json'}
+            });
+            if (response.ok === true)
+            {
+                const posts = await response.json();
+                const sections = document.querySelector('section');
+                posts.forEach(post => sections.append(createArticle(post)));
+            }
+        };
+
+        async function createPost(postTitle, postContent) {
+            const response = await fetch('/api/posts', {
+                method: 'POST',
+                headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    title: postTitle,
+                    content: postContent
+                })
+            });
+            if (response.ok === true)
+            {
+                getPosts();
+            }
+            else
+            {
+                console.log('Пост не создан');
+            }
+        };
+
+        function createArticle(post) {
+            if (!post?.id || !post.title || !post.content)
+            {
+                throw new Error('Invalid post data');
+            }
+
+            const article = document.createElement('article');
+            article.setAttribute('data-rowid', post.id);
+
+            const titleH2 = document.createElement('h2');
+            titleH2.textContent = post.title;
+            article.append(titleH2);
+
+            const contentDiv = document.createElement('div');
+            contentDiv.textContent = post.content;
+            article.append(contentDiv);
+
+            const footer = document.createElement('footer');
+
+            const editLink = document.createElement('button');
+            editLink.textContent = 'edit';
+            editLink.addEventListener('click', async() => await editPost(post.id));
+            footer.append(editLink);
+
+            const deletePost = document.createElement('button');
+            deletePost.textContent = 'delete';
+            deletePost.addEventListener('click', async() => await deletePost(post.id));
+            footer.append(deletePost)
+
+            article.append(footer);
+
+            return article;
+        }
+
+        function resetForm() {
+            document.querySelector('#postTitle').value = '';
+            document.querySelector('#postContent').value = '';
+        };
+
+        document.querySelector('#resetBtn').addEventListener('click', () => resetForm());
+
+        document.querySelector('#saveBtn').addEventListener('click', async () => {
+            const id = document.querySelector('#id');
+            const title = document.querySelector('#postTitle');
+            const content = document.querySelector('#postContent');
+            if (id === null)
+            {
+                await createPost(title.value, content.value);
+            }
+            else
+            {
+                console.log('Надо менять пост');
+            }
+        });
+
+        getPosts();
+    </script>
+</body>
+</html>
