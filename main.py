@@ -16,6 +16,7 @@ def getDb():
 
 @app.get("/")
 def root():
+    #done
     return FileResponse("public/index.html")
 
 @app.get("/api/posts")
@@ -41,10 +42,22 @@ def createPost(data = Body(), db: Session = Depends(getDb)):
 @app.put("/api/posts")
 def editPost(data = Body(), db: Session = Depends(getDb)):
     post = db.query(Post).filter(Post.id == data["id"]).first()
-    if post == None:
-        return JSONResponse(status_code=404, content={"message": "Пост с таким id не найден"})
-    else:
-        return post
 
+    if post == None:
+        return JSONResponse(status_code=404, content={"message": f"post with this id - {id} not found"})
+
+    return post
+
+@app.delete('/api/post/{id}')
+def deletePost(id, db: Session = Depends(getDb)):
+    #done
+    post = db.query(Post).filter(Post.id == int(id)).first()
+
+    if post == None:
+        return JSONResponse(status_code=404, content={"message": f"post with this id - {id} not found"})
+
+    db.delete(post)
+    db.commit()
+    return post
 
 

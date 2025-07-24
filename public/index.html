@@ -40,11 +40,24 @@
             });
             if (response.ok === true)
             {
-                getPosts();
+                await getPosts();
             }
             else
             {
                 console.log('Пост не создан');
+            }
+        };
+
+        async function deletePost(id) {
+            const response = await fetch(`/api/post/${id}`, {
+                method: 'DELETE',
+                headers: {'Accept': 'application/json'}
+            });
+            if (response.ok === true)
+            {
+                const sections = document.querySelector('section');
+                sections.innerHTML = '';
+                await getPosts();
             }
         };
 
@@ -72,10 +85,10 @@
             editLink.addEventListener('click', async() => await editPost(post.id));
             footer.append(editLink);
 
-            const deletePost = document.createElement('button');
-            deletePost.textContent = 'delete';
-            deletePost.addEventListener('click', async() => await deletePost(post.id));
-            footer.append(deletePost)
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'delete';
+            deleteBtn.addEventListener('click', async() => await deletePost(post.id));
+            footer.append(deleteBtn)
 
             article.append(footer);
 
