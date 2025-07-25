@@ -1,14 +1,16 @@
 from database import *
 from sqlalchemy.orm import Session
-from fastapi import Depends, FastAPI, Body
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
+from typing import List, Union
+from schemas import PostCreate, PostEdit, PostResponse
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
 def getDb():
-    db = sessionLocal()
+    db = SessionLocal()
     try:
         yield db
     finally:
@@ -18,45 +20,47 @@ def getDb():
 def root():
     return FileResponse("public/index.html")
 
-@app.get("/api/posts")
+@app.get("/api/posts", response_model=List[PostResponse])
 def getAllPosts(db: Session = Depends(getDb)):
     return db.query(Post).all()
 
-@app.get("/api/posts/{id}")
-def getParticularPost(id, db: Session = Depends(getDb)):
-    post = db.query(Post).filter(Post.id == int(id)).first()
+@app.get("/api/posts/{id}", response_model=PostResponse)
+def getParticularPost(id: int, db: Session = Depends(getDb)):
+    post = db.query(Post).filter(Post.id == id).first()
     if post == None:
-        return JSONResponse(status_code=404, content={"message": "Пост с таким id не найден"})
+        raise HTTPException(status_code=404, detail="Post not found")
     else:
         return post
 
-@app.post("/api/posts")
-def createPost(data = Body(), db: Session = Depends(getDb)):
-    post = Post(title=data["title"], content=data["content"])
+@app.post("/api/posts", status_code=201, response_model=PostResponse)
+def createPost(data: PostCreate, db: Session = Depends(getDb)):
+    post = Post(title=data.title, content=data.content)
     db.add(post)
-    db.commit()
-
-@app.put("/api/post/")
-def editPost(data = Body(), db: Session = Depends(getDb)):
-    post = db.query(Post).filter(Post.id == int(data["id"])).first()
-
-    if post == None:
-        return JSONResponse(status_code=404, content={"message": f"post with this id - {id} not found"})
-
-    if data["title"] != "":
-        post.title = data["title"]
-    elif data["content"] != "":
-        post.content = data["content"]
     db.commit()
     db.refresh(post)
     return post
 
-@app.delete('/api/post/{id}')
-def deletePost(id, db: Session = Depends(getDb)):
-    post = db.query(Post).filter(Post.id == int(id)).first()
+@app.put("/api/post/{id}", response_model=PostResponse)
+def editPost(id: int, data: PostEdit, db: Session = Depends(getDb)):
+    post = db.query(Post).filter(Post.id == id).first()
 
     if post == None:
-        return JSONResponse(status_code=404, content={"message": f"post with this id - {id} not found"})
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    if data.title:
+        post.title = data.title
+    if data.content:
+        post.content = data.content
+    db.commit()
+    db.refresh(post)
+    return post
+
+@app.delete('/api/post/{id}', status_code=200, response_model=PostResponse)
+def deletePost(id: int, db: Session = Depends(getDb)):
+    post = db.query(Post).filter(Post.id == id).first()
+
+    if post == None:
+        raise HTTPException(status_code=404, detail="Post not found")
 
     db.delete(post)
     db.commit()

@@ -50,11 +50,10 @@
         };
 
         async function editPost(postId) {
-            const response = await fetch('/api/post/', {
+            const response = await fetch(`/api/post/${postId}`, {
                 method: "PUT",
                 headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    id: postId,
                     title: document.querySelector('#postTitle').value,
                     content: document.querySelector('#postContent').value
                 })
