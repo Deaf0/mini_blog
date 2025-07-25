@@ -25,6 +25,7 @@
             {
                 const posts = await response.json();
                 const sections = document.querySelector('section');
+                sections.innerHTML = '';
                 posts.forEach(post => sections.append(createArticle(post)));
             }
         };
@@ -45,6 +46,24 @@
             else
             {
                 console.log('Пост не создан');
+            }
+        };
+
+        async function editPost(postId) {
+            const response = await fetch('/api/post/', {
+                method: "PUT",
+                headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    id: postId,
+                    title: document.querySelector('#postTitle').value,
+                    content: document.querySelector('#postContent').value
+                })
+            });
+            if (response.ok === true)
+            {
+                const sections = document.querySelector('section');
+                sections.innerHTML = '';
+                await getPosts();
             }
         };
 
