@@ -17,6 +17,8 @@
 
     </section>
     <script>
+        let editingPostId = null;
+
         async function getPosts() {
             const response = await fetch('/api/posts', {
                 method: 'GET',
@@ -98,9 +100,11 @@
 
             const editLink = document.createElement('button');
             editLink.textContent = 'edit';
-            const title = document.querySelector('#postTitle').value;
-            const content = document.querySelector('#postContent').value;
-            editLink.addEventListener('click', async() => await editPost(post.id, title, content));
+            editLink.addEventListener('click', () => {
+                document.querySelector('#postTitle').value = post.title;
+                document.querySelector('#postContent').value = post.content;
+                editingPostId = post.id;
+            });
             footer.append(editLink);
 
             const deleteBtn = document.createElement('button');
@@ -116,21 +120,31 @@
         function resetForm() {
             document.querySelector('#postTitle').value = '';
             document.querySelector('#postContent').value = '';
+            editingPostId = null;
         };
 
         document.querySelector('#resetBtn').addEventListener('click', () => resetForm());
 
         document.querySelector('#saveBtn').addEventListener('click', async () => {
-            const title = document.querySelector('#postTitle');
-            const content = document.querySelector('#postContent');
-            if (title.value && content.value)
+            const title = document.querySelector('#postTitle').value;
+            const content = document.querySelector('#postContent').value;
+            if (editingPostId)
             {
-                await createPost(title.value, content.value);
+                await editPost(editingPostId ,title, content);
             }
             else
             {
-                console.log('Надо заполнить все поля');
+                if (title && content)
+                {
+                    await createPost(title, content);
+                }
+                else
+                {
+                    console.log('Надо заполнить все поля');
+                }
             }
+            resetForm();
+            await getPosts();
         });
 
         getPosts();
