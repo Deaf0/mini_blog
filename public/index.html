@@ -5,10 +5,11 @@
     <meta charset="utf-8" />
 </head>
 <body>
-    <p>Enter title</p>
-    <input id="postTitle"></input>
-    <p>Fill post content</p>
-    <input id="postContent"></input>
+    <label for="postTitle">Enter title</label>
+    <input id="postTitle" type="text"></input>
+    <br/>
+    <label for="postContent">Fill post content</label>
+    <textarea id="postContent" rows="5" cols="30"></textarea>
     <br/>
     <button id="saveBtn">Save post</button>
     <button id="resetBtn">Reset form</button>
@@ -42,6 +43,7 @@
             if (response.ok === true)
             {
                 await getPosts();
+                resetForm();
             }
             else
             {
@@ -49,7 +51,7 @@
             }
         };
 
-        async function editPost(postId) {
+        async function editPost(postId, postTitle, postContent) {
             const response = await fetch(`/api/post/${postId}`, {
                 method: "PUT",
                 headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
@@ -60,8 +62,6 @@
             });
             if (response.ok === true)
             {
-                const sections = document.querySelector('section');
-                sections.innerHTML = '';
                 await getPosts();
             }
         };
@@ -73,8 +73,6 @@
             });
             if (response.ok === true)
             {
-                const sections = document.querySelector('section');
-                sections.innerHTML = '';
                 await getPosts();
             }
         };
@@ -100,7 +98,9 @@
 
             const editLink = document.createElement('button');
             editLink.textContent = 'edit';
-            editLink.addEventListener('click', async() => await editPost(post.id));
+            const title = document.querySelector('#postTitle').value;
+            const content = document.querySelector('#postContent').value;
+            editLink.addEventListener('click', async() => await editPost(post.id, title, content));
             footer.append(editLink);
 
             const deleteBtn = document.createElement('button');
@@ -121,16 +121,15 @@
         document.querySelector('#resetBtn').addEventListener('click', () => resetForm());
 
         document.querySelector('#saveBtn').addEventListener('click', async () => {
-            const id = document.querySelector('#id');
             const title = document.querySelector('#postTitle');
             const content = document.querySelector('#postContent');
-            if (id === null)
+            if (title.value && content.value)
             {
                 await createPost(title.value, content.value);
             }
             else
             {
-                console.log('Надо менять пост');
+                console.log('Надо заполнить все поля');
             }
         });
 
